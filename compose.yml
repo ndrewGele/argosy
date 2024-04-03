@@ -10,7 +10,6 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_PORT
       - POSTGRES_USER
-      - RAPID_API_KEY
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -61,16 +60,23 @@ services:
   model-builder:
     image: ghcr.io/ndrewgele/model-builder:latest
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
+      - COMMON_CODE_CONTAINER
+      - MODEL_CORES_FRACTION
+      - MODEL_CUTOFF
+      - MODEL_TUNE_INITIAL
+      - MODEL_TUNE_ITER
+      - MODEL_TUNE_NO_IMPROVE
       - POSTGRES_DB
       - POSTGRES_HOST
+      - POSTGRES_PASSWORD
       - POSTGRES_PORT
+      - POSTGRES_USER
       - SEAWEED_HOST
       - SEAWEED_S3_PORT
       - SEAWEED_MODEL_BUCKET
       - SEAWEED_MODEL_LIMIT
     volumes:
+      - ${COMMON_CODE_LOCAL}:${COMMON_CODE_CONTAINER}
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
@@ -78,6 +84,25 @@ services:
   model-eliminator:
     image: ghcr.io/ndrewgele/model-eliminator:latest
     environment:
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PASSWORD
+      - POSTGRES_PORT
+      - POSTGRES_USER
+      - SEAWEED_HOST
+      - SEAWEED_MODEL_BUCKET
+      - SEAWEED_MODEL_LIMIT
+      - SEAWEED_S3_PORT
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  strat-backtester:
+    image: ghcr.io/ndrewgele/strat-backtester:latest
+    environment:
+      - COMMON_CODE_CONTAINER
+      - MODEL_CUTOFF
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
@@ -87,18 +112,21 @@ services:
       - SEAWEED_S3_PORT
       - SEAWEED_MODEL_BUCKET
       - SEAWEED_MODEL_LIMIT
+      - STRATEGIES_CONTAINER
     volumes:
+      - ${COMMON_CODE_LOCAL}:${COMMON_CODE_CONTAINER}
+      - ${STRATEGIES_LOCAL}:${STRATEGIES_CONTAINER}
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
-
+    
   postgres:
     image: postgres:15.2-alpine
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
       - POSTGRES_DB
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
     ports:
       - 5432:${POSTGRES_PORT}
     volumes:
