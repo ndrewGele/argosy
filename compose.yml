@@ -1,0 +1,139 @@
+name: argosy
+
+services:
+
+  symbol-fetcher:
+    image: ghcr.io/ndrewgele/symbol-fetcher:latest
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PASSWORD
+      - POSTGRES_PORT
+      - POSTGRES_USER
+      - RAPID_API_KEY
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  ohlc-fetcher:
+    image: ghcr.io/ndrewgele/ohlc-fetcher:latest
+    environment:
+      - APCA_PAPER_KEY
+      - APCA_PAPER_SECRET
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PASSWORD
+      - POSTGRES_PORT
+      - POSTGRES_USER
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  macro-fetcher:
+    image: ghcr.io/ndrewgele/macro-fetcher:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - SELENIUM_HOST
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  indicator-calc:
+    image: ghcr.io/ndrewgele/indicator-calc:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  model-builder:
+    image: ghcr.io/ndrewgele/model-builder:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - SEAWEED_HOST
+      - SEAWEED_S3_PORT
+      - SEAWEED_MODEL_BUCKET
+      - SEAWEED_MODEL_LIMIT
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  model-eliminator:
+    image: ghcr.io/ndrewgele/model-eliminator:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - SEAWEED_HOST
+      - SEAWEED_S3_PORT
+      - SEAWEED_MODEL_BUCKET
+      - SEAWEED_MODEL_LIMIT
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15.2-alpine
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      - 5432:${POSTGRES_PORT}
+    volumes:
+      - ./postgres_database:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 2345:8080
+
+  seaweedfs:
+    image: chrislusf/seaweedfs
+    ports:
+      - 9333:9333
+      - 8333:8333
+      - 8080:8080
+      - 18080:18080
+    volumes:
+      - ./seaweedfs/data:/data
+      - ./seaweedfs/config:/etc/seaweedfs
+    command: server -s3 -dir="/data" -master.volumeSizeLimitMB=250 -master.defaultReplication=000
+    restart: unless-stopped
+  
+  selenium:
+    image: selenium/standalone-chrome:4.8.1-20230221
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=30
+      - SE_NODE_MAX_SESSIONS=3
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+    ports:
+      - 4444:4444
+      - 7900:7900
+    shm_size: 500m
+    restart: unless-stopped

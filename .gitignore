@@ -1,0 +1,8 @@
+# Ignore all subdirectories
+/*/
+
+# Environment
+.env
+
+# Dumb MacOS Thing
+.DS_Store
