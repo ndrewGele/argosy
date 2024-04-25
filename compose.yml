@@ -16,19 +16,19 @@ services:
     restart: unless-stopped
 
   ohlc-fetcher:
-    image: ghcr.io/ndrewgele/ohlc-fetcher:latest
-    environment:
-      - APCA_PAPER_KEY
-      - APCA_PAPER_SECRET
-      - POSTGRES_DB
-      - POSTGRES_HOST
-      - POSTGRES_PASSWORD
-      - POSTGRES_PORT
-      - POSTGRES_USER
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
+     image: ghcr.io/ndrewgele/ohlc-fetcher:latest
+     environment:
+       - APCA_PAPER_KEY
+       - APCA_PAPER_SECRET
+       - POSTGRES_DB
+       - POSTGRES_HOST
+       - POSTGRES_PASSWORD
+       - POSTGRES_PORT
+       - POSTGRES_USER
+     volumes:
+       - /etc/timezone:/etc/timezone:ro
+       - /etc/localtime:/etc/localtime:ro
+     restart: unless-stopped
 
   macro-fetcher:
     image: ghcr.io/ndrewgele/macro-fetcher:latest
@@ -61,6 +61,7 @@ services:
     image: ghcr.io/ndrewgele/model-builder:latest
     environment:
       - COMMON_CODE_CONTAINER
+      - MODELS_CONTAINER
       - MODEL_CORES_FRACTION
       - MODEL_CUTOFF
       - MODEL_TUNE_INITIAL
@@ -77,6 +78,7 @@ services:
       - SEAWEED_MODEL_LIMIT
     volumes:
       - ${COMMON_CODE_LOCAL}:${COMMON_CODE_CONTAINER}
+      - ${MODELS_LOCAL}:${MODELS_CONTAINER}
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
@@ -102,6 +104,7 @@ services:
     image: ghcr.io/ndrewgele/strat-backtester:latest
     environment:
       - COMMON_CODE_CONTAINER
+      - MODELS_CONTAINER
       - MODEL_CUTOFF
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -115,11 +118,12 @@ services:
       - STRATEGIES_CONTAINER
     volumes:
       - ${COMMON_CODE_LOCAL}:${COMMON_CODE_CONTAINER}
+      - ${MODELS_LOCAL}:${MODELS_CONTAINER}
       - ${STRATEGIES_LOCAL}:${STRATEGIES_CONTAINER}
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
-    
+
   postgres:
     image: postgres:15.2-alpine
     environment:
@@ -153,7 +157,7 @@ services:
       - ./seaweedfs/config:/etc/seaweedfs
     command: server -s3 -dir="/data" -master.volumeSizeLimitMB=250 -master.defaultReplication=000
     restart: unless-stopped
-  
+
   selenium:
     image: selenium/standalone-chrome:4.8.1-20230221
     environment:
