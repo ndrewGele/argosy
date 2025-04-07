@@ -44,19 +44,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
-  indicator-calc:
-    image: ghcr.io/ndrewgele/indicator-calc:latest
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_HOST
-      - POSTGRES_PORT
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
-
   model-builder:
     image: ghcr.io/ndrewgele/model-builder:latest
     environment:
